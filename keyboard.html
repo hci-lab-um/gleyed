@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+	<meta charset="utf-8">
+	<title>Dwell-Free Typing</title>
+	
+	<script src="scripts/jquery-1.10.2.min.js"></script>
+	<script src="scripts/jquery-1.10.2.js"></script>
+	<script src="scripts/jquery.pietimer.js"></script>
+	<script src="scripts/keyboard.js"></script>
+	<script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat|Muli" >
+
+	<script type="text/javascript">
+		//Get data from URL
+		function GetURLParameter(sParam)
+		{
+		    var sPageURL = window.location.search.substring(1);
+		    var sURLVariables = sPageURL.split('&');
+		    for (var i = 0; i < sURLVariables.length; i++)
+		    {
+		        var sParameterName = sURLVariables[i].split('=');
+		        if (sParameterName[0] == sParam)
+		        {
+		            return decodeURIComponent(sParameterName[1]);
+		        }
+		    }
+		}
+		
+		var layout = GetURLParameter('layout');
+		var dwelltime= GetURLParameter('dwellTime');
+		var pangram = GetURLParameter('pangram');
+
+		//--calling plugin--//
+		$(document).ready(function($) {
+			$("write").keyboardLayout("uk", layout,dwelltime);
+		})
+	</script>
+</head>
+
+<body>
+	<div id="myModal" class="modal">
+		<!-- Modal content -->
+		<div class="modal-content">
+			<p class="modal-text">Start typing in...</p>
+			<p class="modal-text-seconds" id="countdown-sec"></p>
+		</div>
+	</div>
+
+	<div class="button" id="button_delete">
+		<div class="button-pie"></div>
+	</div>
+	<div class="preloader hidden" id="preloader">
+		<img src="images/default.gif" class="preloader-gif">
+	</div>
+	<div id="mainContentKeyboard">
+		<div contenteditable="true" id="write"></div>	    
+		<div id="keyboard">
+		<div id="separator1" class="vertical-line hidden" style="left: 516px;"></div>
+		<div id="separator2" class="vertical-line hidden" style="left: 848px"></div>
+		</div>    	
+	</div>	
+
+	<div class="button-space" id="button_Space">
+		<div class="button-pie"></div>
+	</div>
+	<div id='readyConfirmation' class='hidden'>
+		<form id="Confirm" onSubmit="Levenshtein(pangram, $('#write').clone().children().find('.primary').text());" action="results.html" method="GET">
+			<input type="hidden" id="accuracy" name="accuracy" value=""/>
+			<input type="hidden" id="error" name="error" value=""/>
+			<input type="hidden" id="wpm" name="wpm" value=""/>
+			<input type="hidden" id="tot" name="TOT" value=""/>
+			<input type="hidden" id="layout" name="layout" value=""/>
+			<input type="hidden" id="inputString" name="string" value=""/>
+ 			<span id='readyText'>Are you ready?</span>
+			<button type="submit" id="yes" class="btn btn-success">Yes</button>
+			<button type="button" id="no" onclick="changeClass()" class="btn btn-danger">No</button>
+		</form>
+	</div>	
+	<button id="Speech" class="hidden">Convert to Speech</button>
+</body>
+</html>
+
+<script>
+	function changeClass()
+	{
+		document.getElementById("readyConfirmation").className = document.getElementById("readyConfirmation").className.replace('visible','hidden');
+	}
+
+	function multiReplace(str, match, repl) {
+	    if (match === repl)
+	        return str;
+	    do {
+	        str = str.replace(match, repl);
+	    } while(str.indexOf(match) !== -1);
+	    return str;
+	}
+
+	//--determining accuracy--//
+	function Levenshtein(a,b) 
+	{		
+		a= multiReplace(a, '+', ' ');
+		b=b.trim();
+	 	b=b.replace(/\n/ig, '');
+		if(a.length == 0)
+		{
+			var errorRate = (b.length/ Math.max(a.length,b.length)) * 100;
+			var accuracyRate = 100 - errorRate;
+			document.getElementById('accuracy').value = Math.round(accuracyRate);
+			document.getElementById('error').value = Math.round(errorRate);
+			return row[a.length];
+		}
+
+		if(b.length == 0)
+		{
+			var errorRate = (a.length / Math.max(a.length,b.length)) * 100;
+			var accuracyRate = 100 - errorRate;
+			document.getElementById('accuracy').value = Math.round(accuracyRate);
+			document.getElementById('error').value = Math.round(errorRate);
+			return row[a.length];
+		}
+
+		// swap to save some memory O(min(a,b)) instead of O(a)
+		if(a.length > b.length) {
+		var tmp = a;
+		a = b;
+		b = tmp;
+		}
+
+		var row = [];
+		// init the row
+		for(var i = 0; i <= a.length; i++){
+		row[i] = i;
+		}
+
+		// fill in the rest
+		for(var i = 1; i <= b.length; i++){
+		var prev = i;
+		for(var j = 1; j <= a.length; j++){
+			var val;
+			if(b.charAt(i-1) == a.charAt(j-1)){
+			val = row[j-1]; // match
+			} else {
+			val = Math.min(row[j-1] + 1, // substitution
+							prev + 1,     // insertion
+							row[j] + 1);  // deletion
+			}
+			row[j - 1] = prev;
+			prev = val;
+		}
+		row[a.length] = prev;
+		}
+		var errorRate = (row[a.length] / Math.max(a.length,b.length)) * 100;
+		var accuracyRate = 100 - errorRate;
+		document.getElementById('accuracy').value = Math.round(accuracyRate);
+		document.getElementById('error').value = Math.round(errorRate);
+		return row[a.length];
+	}
+</script>

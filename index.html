@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+	<meta charset="utf-8">
+	<title>Dwell-Free Typing</title>
+	
+	<script src="scripts/jquery-1.10.2.min.js"></script>
+	<script src="scripts/jquery-1.10.2.js"></script>
+	<script src="scripts/Keyboard.js"></script>
+	<script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat|Muli">
+</head>
+
+<body>
+	<div id="mainContentIndex">
+		<form id="prefSelection" action="keyboard.html" method="GET">
+		
+				<select name="layout" id="layout" class="keyboard-select">
+				  <option value="" disabled selected>Select Keyboard</option>
+				  <option value="qwerty">QWERTY</option>
+				  <option value="dvorak">Dvorak</option>
+				  <option value="alphabetical">Alphabetical</option>
+				  <option value="newKeyboard">New Keyboard</option>
+				</select>
+				<select name="dwellTime" id="dwellTime" class="clock-select">
+				  <option value="" disabled selected>Select Mode of Input</option>
+				  <option value="0">Dwell-Free</option>
+				  <option value="800">800ms</option>
+				  <option value="1000">1000ms</option>
+				  <option value="1700">1700ms</option>
+				</select>
+				<select name="pangram" id="pangram" class="pangram-select">
+				  <option value="" disabled selected>Select Pangram</option>
+				  <option value="the quick brown fox jumps over the lazy dog">the quick brown fox jumps over the lazy dog</option>
+				  <option value="pack my red box with five dozen quality jugs">pack my red box with five dozen quality jugs</option>
+				  <option value="the five boxing wizards jump quickly">the five boxing wizards jump quickly</option>
+				</select>
+			<input type="submit" class="submit" value="Submit"/>
+		</form>
+	</div>
+</body>
+</html>
+
+<script>
+//--Validation of keyboard layout and dwell-time--//
+document.getElementById("prefSelection").onsubmit = function() {
+    var layout = document.getElementById("layout");
+	var dwelltime = document.getElementById("dwellTime");
+	var pangram = document.getElementById("pangram");
+		if(layout.value=="" || dwelltime.value==""|| pangram.value=="")
+		{
+			alert('Please select an option for all.');
+			return false;
+		}
+		return true;
+}
+</script>

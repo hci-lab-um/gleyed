@@ -1,0 +1,169 @@
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<title>Dwell-Free Typing Results</title>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Muli:300">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <script src="scripts/jquery-1.10.2.js"></script>
+	<script src="scripts/FileSaver.js"></script>
+</head>
+
+<body>
+    <p class="resultsTitle">Performance Results</p>
+
+    <div class="container">
+        <div class = "row">
+            <div class="results">
+                <div class="col-md-3 side-border-result">
+                    <p class="results-heading">Words Per Minute</p>
+                    <p id="wpmResult" class="results-value wpm"></p>
+                </div>
+                <div class="col-md-3 side-border-result">
+                    <p class="results-heading accuracy-heading">Accuracy</p>
+                    <div class="c100 center" id="accuracyClass">
+                        <span id="accuracyResult"></span>
+                        <div class="slice">
+                            <div class="bar"></div>
+                            <div class="fill"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 side-border-result">
+                    <p class="results-heading">Time on Task</p>
+                    <p class="seconds">(seconds)</p>
+                    <p id="totResult" class="results-value tot"></p>
+                </div>
+                <div class="col-md-3">
+                    <p class="results-heading accuracy-heading">Error Rate</p>
+                    <div class="c100 center" id="errorClass">
+                        <span id="errorRateResult"></span>
+                        <div class="slice">
+                            <div class="bar"></div>
+                            <div class="fill"></div>
+                        </div>
+                    </div>
+                </div>               
+            </div>
+        </div>
+    </div>
+
+    <button id='download'>Download Gaze-Data</button>
+    
+    <script type="text/javascript">
+		//Get data from URL
+		function GetURLParameter(sParam)
+		{
+		    var sPageURL = window.location.search.substring(1);
+		    var sURLVariables = sPageURL.split('&');
+		    for (var i = 0; i < sURLVariables.length; i++)
+		    {
+		        var sParameterName = sURLVariables[i].split('=');
+		        if (sParameterName[0] == sParam)
+		        {
+		            return decodeURIComponent(sParameterName[1]);
+		        }
+		    }
+		}
+
+        function multiReplace(str, match, repl)
+        {
+            if (match === repl)
+                return str;
+            do {
+                str = str.replace(match, repl);
+            } while(str.indexOf(match) !== -1);
+            return str;
+	    }
+		
+		var accuracy = GetURLParameter('accuracy');
+		document.getElementById('accuracyResult').innerHTML = accuracy + "%";
+        document.getElementById('accuracyClass').className += " p" + accuracy;
+		var wpm= GetURLParameter('wpm');
+		document.getElementById('wpmResult').innerHTML = wpm;
+		var tot= GetURLParameter('TOT');
+		document.getElementById('totResult').innerHTML = tot;
+		var errorRate = GetURLParameter('error');
+        document.getElementById('errorRateResult').innerHTML = errorRate + "%";
+        document.getElementById('errorClass').className += " p" + errorRate;
+        var keyboardLayout = GetURLParameter('layout');
+        var inputString = GetURLParameter('string');
+        inputString = multiReplace(inputString,'+',' ');
+	</script>
+</body>
+
+<script type="text/javascript">
+    $("#download").on("click", function()
+    {
+        var db, gazeHistoryTable, dwellfree, cursor, readyToSave = false;
+        
+        function openDB()
+        {
+            var test = $.Deferred();
+            dwellfree = indexedDB.open('dwellfree');
+            dwellfree.onsuccess = function (e) 
+            {
+                db=e.target.result;
+                test.resolve();
+                console.log('Opened db');
+                return test.promise();
+            }
+            return test.promise();
+        }
+        
+        function openGazeHistoryTable()
+        {
+            var test1 = $.Deferred();
+            gazeHistoryTable = db.transaction(["GazeDataHistory"],"readonly").objectStore("GazeDataHistory").openCursor();
+            historyData ='';
+            gazeHistoryTable.onsuccess = function (e)
+            {
+                cursor = e.target.result;
+                if(cursor)
+                {
+                    historyData += "X: " + cursor.value.x + ", " + "Y: " + cursor.value.y + ", " + "L: " + cursor.value.l + "\r\n";
+                    while(cursor.continue())
+                    {
+                    }
+                }
+                if(cursor==null)
+                {
+                    console.log(historyData);
+                    test1.resolve();
+                    readyToSave = true;
+                    console.log('got all time series');
+                }
+                console.log('GazDataHistory table successfully opened');
+                test1.resolve();
+            }
+            
+            gazeHistoryTable.onerror = function (e)
+            {
+                console.log('Error opening GazDataHistory table');
+            }
+            return test1.promise;
+        }
+        
+        function saveTextFile()
+        {
+            historyData += "Layout: " + keyboardLayout + "\r\n" + "Input String: " + inputString + "\r\n" + "Accuracy: " + accuracy + "\r\n" + "Error Rate: " + errorRate + "\r\n" + "Words Per Minute: " + wpm + "\r\n" + "Time on Task: " + tot + "\r\n";
+            var blob = new Blob([historyData], {
+                type: "text/plain;charset=utf-8;",
+            });
+            saveAs(blob, "Participant Gaze History.txt");
+        }
+        
+        openDB()
+        .then(openGazeHistoryTable)
+        
+        setInterval(function()
+        {
+            if(readyToSave==true)
+            {
+                saveTextFile();
+                readyToSave=false;
+            }
+        },600);
+    });
+</script>

@@ -1,6 +1,6 @@
 /*global indexedDB IDBKeyRange $ jQuery*/
 
-importScripts('https://cloud.github.com/downloads/kpozin/jquery-nodom/jquery.nodom.js');
+importScripts('jquery.nodom.js');
 
 var db, coordinateX, coordinateY, l, count=0, request, prevLetter, observableState, timeSeries, cursor, stringTimeSeriesTableData="", interval;
 

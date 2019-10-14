@@ -1,5 +1,5 @@
-# Swift
-Swift - a swipe-typing keyboard for eye-based interaction (data collection toolset)
+# Gleyed
+Gleyed - a swipe-typing keyboard for eye-based interaction (data collection toolset)
 
 This project was developed at the University of Malta (HCI Lab) by Bernine Caruana under the supervision of Chris Porter.
 
